@@ -29,6 +29,8 @@ class Settings:
 
     verbose: bool = False
 
+    filter_games_tags: str | None = None
+
 
 def create_and_get_config_path() -> str:
     """Returns the configuration directory in the appropriate

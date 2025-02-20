@@ -56,6 +56,7 @@ def parse_args() -> argparse.Namespace:
                         help="filter downloaded files with a Python regex (unmatched files are skipped)")
     parser.add_argument("--verbose", action="store_true",
                         help="print verbose logs")
+    parser.add_argument("--filter-games-tags", metavar="tags", default=None,)
 
     return parser.parse_args()
     # fmt: on
