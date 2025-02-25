@@ -105,4 +105,6 @@ def load_config(args: argparse.Namespace, profile: str | None = None) -> Setting
         if value := getattr(args, key):
             setattr(settings, key, value)
 
+    settings.filter_games_tags = settings.filter_games_tags.lower().split(",") if settings.filter_games_tags else None
+
     return settings

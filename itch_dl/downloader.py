@@ -60,6 +60,8 @@ class GameMetadata(TypedDict, total=False):
     released_at: str
     published_at: str
 
+    tags: list[str]
+
 
 class GameDownloader:
     def __init__(self, settings: Settings, keys: dict[int, str]) -> None:
@@ -153,6 +155,7 @@ class GameDownloader:
             cover_url=self.get_meta(site, property="og:image"),
             screenshots=screenshot_urls,
             description=description,
+            tags=[]
         )
 
         infobox_div = site.find("div", class_="game_info_panel_widget")
@@ -162,6 +165,7 @@ class GameDownloader:
                 if dt in infobox:
                     metadata[dt] = infobox[dt].isoformat()  # noqa: PyTypedDict (non-literal TypedDict keys)
                     del infobox[dt]  # noqa: PyTypedDict (non-literal TypedDict keys)
+            
 
             if "author" in infobox:
                 metadata["author"] = infobox["author"]["author"]
@@ -174,6 +178,13 @@ class GameDownloader:
                 metadata["author_url"] = f"https://{urllib.parse.urlparse(url).netloc}"
 
             metadata["extra"] = infobox
+        
+        # Extract tags from the metadata
+        tags = metadata["extra"].get("tags", {}.keys())
+        tags = list(tags)
+        # to lowercase and remove spaces
+        tags = [tag.lower().replace(" ", "") for tag in tags]
+        metadata["tags"] = tags
 
         agg_rating = rating_json.get("aggregateRating") if rating_json else None
         if agg_rating:
@@ -300,6 +311,16 @@ class GameDownloader:
                 if any(key not in upload for key in ("id", "filename", "storage")):
                     errors.append(f"Upload metadata incomplete: {upload}")
                     continue
+
+                # check tags
+                if self.settings.filter_games_tags and not all(tag in metadata["tags"] for tag in self.settings.filter_games_tags):
+                    logging.info(
+                        "Game '%s' does not match the tags filter '%s', skipping",
+                        title,
+                        self.settings.filter_games_tags,
+                    )
+                    continue
+
 
                 upload_id = upload["id"]
                 file_name = upload["filename"]
